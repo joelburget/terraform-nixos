@@ -28,6 +28,12 @@ variable "licenses" {
   description = "A list of license URIs to apply to this image. Changing this forces a new resource to be created."
 }
 
+variable "guest_os_features" {
+  type        = list(string)
+  default     = ["GVNIC"]
+  description = "A list of guest OS features to enable on the image"
+}
+
 # ----------------------------------------------------
 
 data "external" "nix_build" {
@@ -78,6 +84,13 @@ resource "google_compute_image" "nixos" {
 
   raw_disk {
     source = "https://${var.bucket_name}.storage.googleapis.com/${google_storage_bucket_object.nixos.name}"
+  }
+
+  dynamic "guest_os_features" {
+    for_each = var.guest_os_features
+    content {
+      type = guest_os_features.value
+    }
   }
 
   lifecycle {
